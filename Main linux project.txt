@@ -1,0 +1,236 @@
+#!/bin/bash
+
+# Function to display help
+show_help() {
+    
+    echo "help"
+    echo "Usage: internsctl [options] [command]"
+    echo "Options:"
+    echo "  --help          Display this help message"
+    echo "  --version       Display command version"
+    echo ""
+    echo "Commands:"
+    echo "  cpu getinfo                 Get CPU information"
+    echo "  memory getinfo              Get memory information"
+    echo "  user create <username>      Create a new user"
+    echo "  user list                   List all users"
+    echo "  user list --sudo-only       List users with sudo permissions"
+    
+    echo ""
+    echo "  file getinfo <options><file-name>    Get complete information about a file"
+    
+    echo "Options:"
+    echo "--size, -s           Get information about file size "
+    echo "--permissions, -p    Get information about file permissions"
+    echo "--owner, -o          Get information about file owner"
+    echo "--last-modified, -m  Get information about file modification"
+}
+
+# Function to display version
+show_version() {
+    echo "version 0.1.0"
+}
+
+get_cpu_info() {
+    echo "CPU Information:"
+    lscpu  
+}
+
+# Function to retrieve Memory
+get_memory_info() {
+    echo "Memory Information:"
+    free  
+}
+
+#Function to create a new user
+create_user() {
+    if [ $# -ne 1 ]; then
+        echo "Usage: internsctl user create <username>"
+        return 1
+    fi
+
+    local username="$1"
+
+    if id "$username" &>/dev/null; then
+        echo "User '$username' already exists."
+        return 1
+    fi
+
+    sudo adduser "$username"
+
+    if [ $? -eq 0 ]; then
+        echo "User '$username' created successfully."
+    else
+        echo "Failed to create user '$username'."
+        return 1
+    fi
+}
+
+
+# Function to list all users
+list_users() {
+    getent passwd | cut -d: -f1
+}
+
+# Function to list users 
+list_sudo_users() {
+    
+    getent group sudo
+}
+
+
+
+
+
+#function to get file info without options
+
+   
+get_file_info() {
+    # Variables to store options
+    size_option=false
+    permissions_option=false
+    owner_option=false
+    last_modified_option=false
+
+    # Check if options are passed before the filename
+    if [[ "$1" =~ ^-- ]]; then
+        while [[ "$1" =~ ^-- ]]; do
+            case "$1" in
+                --size | -s)
+                    size_option=true
+                    ;;
+                --permissions | -p)
+                    permissions_option=true
+                    ;;
+                --owner | -o)
+                    owner_option=true
+                    ;;
+                --last-modified | -m)
+                    last_modified_option=true
+                    ;;
+                *)
+                    echo "Invalid option: $1"
+                    return 1
+                    ;;
+            esac
+            shift
+        done
+    fi
+
+    #  filename
+    filename="$1"
+
+    # Display file info based on options or default behavior
+    echo "File: $filename"
+    if [ ! -e "$filename" ]; then
+        echo "File '$filename' not found."
+        return 1
+    fi
+
+    if [ "$size_option" = true ]; then
+        echo "Size(B): $(stat -c '%s' "$filename")"
+    elif [ "$permissions_option" = true ]; then
+        echo "Access: $(stat -c '%A' "$filename")"
+    elif [ "$owner_option" = true ]; then
+        echo "Owner: $(stat -c '%U' "$filename")"
+    elif [ "$last_modified_option" = true ]; then
+        echo "Last Modified: $(stat -c '%y' "$filename")"
+    else
+        # Default behavior if no options are passed
+    
+    echo "Access: $(stat -c '%A' "$filename")"
+    echo "Size(B): $(stat -c '%s' "$filename")"
+    echo "Owner: $(stat -c '%U' "$filename")"
+    fi
+}
+
+
+
+main() {
+    case "$1" in
+        help | --help)
+            show_help
+            ;;
+        --version)
+            show_version
+            ;;
+        cpu)
+            case "$2" in
+                getinfo)
+                    get_cpu_info
+                    ;;
+                *)
+                    echo "Invalid 'cpu' command. Usage: internsctl cpu getinfo"
+                    ;;
+            esac
+            ;;
+        memory)
+            case "$2" in
+                getinfo)
+                    get_memory_info
+                    ;;
+                *)
+                    echo "Invalid 'memory' command. Usage: internsctl memory getinfo"
+                    ;;
+            esac
+            ;;
+            
+            user)
+            case "$2" in
+                   create)
+                   create_user "$3"
+                       ;;
+    
+            list)
+            case "$3" in
+             --sudo-only)
+                 echo "check sudo user"
+                 list_sudo_users
+                ;;
+            
+            *)
+                echo "check user"
+                list_users
+                ;;
+        esac
+        ;;
+    *)
+        echo "Invalid 'user' command. Usage:"
+        echo "  internsctl user create <username>"
+        echo "  internsctl user list"
+        echo "  internsctl user list --sudo-only"
+        ;;
+esac
+;;
+   
+
+        file)
+            case "$2" in
+                getinfo)
+                    # Check if  filename is passed
+                    if [ "$#" -eq 3 ]; then
+                        get_file_info "$3"
+                    elif [ "$#" -eq 4 ] && [[ "$3" =~ ^-- ]]; then
+                        get_file_info "$3" "$4"  # Pass options and filename to the function
+                    else
+                        echo "Invalid command. Usage: internsctl file getinfo <filename> [options]"
+                        return 1
+                    fi
+                    ;;
+                *)
+                    echo "Invalid 'file' command. Usage: internsctl file getinfo <filename> [options]"
+                    ;;
+            esac
+            ;;
+   
+        
+        *)
+            echo "Invalid command or option. Use 'internsctl --help' for assistance."
+            exit 1
+            ;;
+    esac
+}
+
+# Execute main fnction
+main "$@"
+

@@ -1,0 +1,32 @@
+
+
+1. *Create the Script:*
+   - Open a text editor.
+   - Copy and paste the script into the text editor.
+   - Save the script with the name internsctl using the .sh extension (e.g., internsctl.sh).
+
+2. *Store the Script:*
+   - Store the script in a directory of your choice. For example, you can create a directory named scripts in your home directory (~/).
+   
+3. *Change Permissions:*
+   - Open your terminal.
+   - Navigate to the directory where the script is stored, using the cd command.
+   - Use the chmod +x internsctl.sh command to make the script executable.
+
+4. *Run the Script:*
+   - To execute the script from the same directory, use ./internsctl.sh in the terminal.
+   
+5. *Running from Anywhere:*
+   - To run the script from anywhere in the terminal without specifying the path (./), move the script to a directory listed in the system's PATH variable. For example, /usr/local/bin is commonly used.
+   - Use the sudo mv internsctl.sh /usr/local/bin/internsctl command to move the script to /usr/local/bin and rename it to internsctl.
+
+6. *Run from Anywhere:*
+   - After moving the script to a directory listed in PATH, you can execute it from any location in the terminal by simply typing internsctl.
+
+### Steps to Execute Script :
+
+- After making the script executable and placing it in a directory within the PATH, use the commands mentioned in the script's help section. For instance:
+  - To get CPU information: internsctl cpu getinfo
+  - To create a new user: internsctl user create <username>
+  - To list all users: internsctl user list
+  - To get file information: internsctl file getinfo <file-name>
